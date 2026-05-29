@@ -91,7 +91,7 @@ const App = () => {
 						<h1 className="text-center">
 							Direction:{" "}
 							{rudder == 45
-								? "C"
+								? "CEN"
 								: rudder < 45
 									? `${45 - rudder}° L`
 									: `${rudder - 45}° R`}
