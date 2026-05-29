@@ -17,7 +17,11 @@ const App = () => {
 		try {
 			if (portRef.current) return;
 
-			portRef.current = await navigator.serial.requestPort();
+			const sppUUID = "00001101-0000-1000-8000-00805f9b34fb"
+
+			portRef.current = await navigator.serial.requestPort({
+				allowedBluetoothServiceClassIds: [sppUUID]
+			});
 			await portRef.current.open({ baudRate: 9600 });
 
 			if (portRef.current.writable) {
@@ -79,13 +83,13 @@ const App = () => {
 						<Button
 							icon="arrow_back"
 							text=""
-							onClick={() => rudder > 0 && setRudder(rudder - 1)}
+							onClick={() => rudder > 0 && setRudder(rudder - 15)}
 						/>
-						<h1 className="text-center">Rudder</h1>
+						<h1 className="text-center">Direction: {rudder == 45 ? "C" : rudder < 45 ? `${45 - rudder}° L` : `${rudder - 45}° R`}</h1>
 						<Button
 							icon="arrow_forward"
 							text=""
-							onClick={() => rudder < 90 && setRudder(rudder + 1)}
+							onClick={() => rudder < 90 && setRudder(rudder + 15)}
 						/>
 					</div>
 				</div>
