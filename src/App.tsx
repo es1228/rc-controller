@@ -82,14 +82,13 @@ const App = () => {
 			</div>
 			<div className="fixed bottom-25 left-5 lg:top-120 lg:bottom-20">
 				<div className="bg-on-bg-light dark:bg-on-bg-dark flex w-fit flex-col gap-2 rounded-full">
-					<div className="flex items-center gap-15">
+					<div className="flex items-center gap-10">
 						<Button
 							icon="arrow_back"
 							text=""
 							onClick={() => rudder > 0 && setRudder(rudder - 15)}
 						/>
 						<h1 className="text-center">
-							Direction:{" "}
 							{rudder == 45
 								? "CEN"
 								: rudder < 45
