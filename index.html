@@ -5,10 +5,45 @@
 		<link rel="icon" type="image/svg+xml" href="" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>RC Controller</title>
-		<script type="module" crossorigin src="/rc-controller/assets/index-DNaDrscz.js"></script>
-		<link rel="stylesheet" crossorigin href="/rc-controller/assets/index-DwC8Ysi1.css">
+		<script type="module" crossorigin src="/rc-controller/assets/index-BJyXjycd.js"></script>
+		<link rel="stylesheet" crossorigin href="/rc-controller/assets/index-DoyBIhsy.css">
 	</head>
-	<body class="bg-page-light text-text-light dark:bg-page-dark dark:text-text-dark">
+	<body
+		class="bg-page-light text-text-light dark:bg-page-dark dark:text-text-dark"
+	>
 		<div id="root"></div>
+		<script>
+			var PleaseRotateOptions = {
+				startOnPageLoad: true,
+				forcePortrait: false,
+				message: "Please Rotate Your Device",
+				subMessage: "Portrait Mode Unsupported",
+				allowClickBypass: false,
+				zIndex: 1000,
+			};
+		</script>
+		<script src="pleaserotate.js"></script>
+		<style>
+			@media (prefers-color-scheme: dark) {
+				#pleaserotate-graphic {
+					fill: #fff;
+				}
+
+				#pleaserotate-backdrop {
+					color: #fff;
+					background-color: #000;
+				}
+			}
+			@media (prefers-color-scheme: light) {
+				#pleaserotate-graphic {
+					fill: #000;
+				}
+
+				#pleaserotate-backdrop {
+					color: #000;
+					background-color: #fff;
+				}
+			}
+		</style>
 	</body>
 </html>
