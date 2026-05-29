@@ -6,8 +6,43 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>RC Controller</title>
 	</head>
-	<body class="bg-page-light text-text-light dark:bg-page-dark dark:text-text-dark">
+	<body
+		class="bg-page-light text-text-light dark:bg-page-dark dark:text-text-dark"
+	>
 		<div id="root"></div>
 		<script type="module" src="/src/main.tsx"></script>
+		<script>
+			var PleaseRotateOptions = {
+				startOnPageLoad: true,
+				forcePortrait: false,
+				message: "Please Rotate Your Device",
+				subMessage: "Portrait Mode Unsupported",
+				allowClickBypass: false,
+				zIndex: 1000,
+			};
+		</script>
+		<script src="pleaserotate.js"></script>
+		<style>
+			@media (prefers-color-scheme: dark) {
+				#pleaserotate-graphic {
+					fill: #fff;
+				}
+
+				#pleaserotate-backdrop {
+					color: #fff;
+					background-color: #000;
+				}
+			}
+			@media (prefers-color-scheme: light) {
+				#pleaserotate-graphic {
+					fill: #000;
+				}
+
+				#pleaserotate-backdrop {
+					color: #000;
+					background-color: #fff;
+				}
+			}
+		</style>
 	</body>
 </html>

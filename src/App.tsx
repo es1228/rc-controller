@@ -17,10 +17,10 @@ const App = () => {
 		try {
 			if (portRef.current) return;
 
-			const sppUUID = "00001101-0000-1000-8000-00805f9b34fb"
+			const sppUUID = "00001101-0000-1000-8000-00805f9b34fb";
 
 			portRef.current = await navigator.serial.requestPort({
-				allowedBluetoothServiceClassIds: [sppUUID]
+				allowedBluetoothServiceClassIds: [sppUUID],
 			});
 			await portRef.current.open({ baudRate: 9600 });
 
@@ -70,10 +70,13 @@ const App = () => {
 	return (
 		<>
 			<div className="m-4 flex w-fit flex-col gap-4">
-				<h1 className="text-3xl">RC Controller</h1>
+				<div className="flex items-center gap-4">
+					<h1 className="text-2xl">RC Controller</h1>
+					<Button icon="fullscreen" text="Toggle" onClick={() => {!document.fullscreenElement ? document.documentElement.requestFullscreen().catch(() => "Unable to enter fullscreen") : document.exitFullscreen() }} />
+				</div>
 				<Button
 					icon="bluetooth"
-					text={isConnected ? "Connected" : "Connect to Bluetooth"}
+					text={isConnected ? "Connected" : "Connect to BT"}
 					onClick={connectSerial}
 				/>
 			</div>
@@ -85,11 +88,20 @@ const App = () => {
 							text=""
 							onClick={() => rudder > 0 && setRudder(rudder - 15)}
 						/>
-						<h1 className="text-center">Direction: {rudder == 45 ? "C" : rudder < 45 ? `${45 - rudder}° L` : `${rudder - 45}° R`}</h1>
+						<h1 className="text-center">
+							Direction:{" "}
+							{rudder == 45
+								? "C"
+								: rudder < 45
+									? `${45 - rudder}° L`
+									: `${rudder - 45}° R`}
+						</h1>
 						<Button
 							icon="arrow_forward"
 							text=""
-							onClick={() => rudder < 90 && setRudder(rudder + 15)}
+							onClick={() =>
+								rudder < 90 && setRudder(rudder + 15)
+							}
 						/>
 					</div>
 				</div>
