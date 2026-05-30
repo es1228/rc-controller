@@ -33,6 +33,7 @@ const Slider = ({
 					orient="vertical"
 					min={min}
 					max={max}
+					step={15}
 					value={value}
 					onChange={onChange}
 					onMouseUp={onMouseUp}
