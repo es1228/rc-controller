@@ -122,7 +122,7 @@ const App = () => {
 	return (
 		<>
 			<div className="m-4 flex w-fit flex-col gap-4">
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-4 select-none">
 					<h1 className="text-2xl">RC Controller</h1>
 					<Button
 						icon="fullscreen"

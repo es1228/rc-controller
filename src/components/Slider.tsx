@@ -42,7 +42,7 @@ const Slider = ({
 				/>
 				<datalist
 					id={`${text.replaceAll(" ", "")}-tickmarks`}
-					className="flex flex-col-reverse justify-between text-sm"
+					className="flex flex-col-reverse justify-between text-sm select-none"
 				>
 					<option value={min} label={`${min}`}></option>
 					<option
@@ -52,7 +52,7 @@ const Slider = ({
 					<option value={max} label={`${max}`}></option>
 				</datalist>
 			</div>
-			<h1>{text}</h1>
+			<h1 className="select-none">{text}</h1>
 		</div>
 	);
 };
