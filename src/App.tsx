@@ -13,15 +13,15 @@ const App = () => {
 	);
 	const portRef = useRef<SerialPort | null>(null);
 
+	const liftRef = useRef<boolean>(false);
+	const speedRef = useRef<boolean>(false);
+	const serialDelay = 50;
+
 	const connectSerial = async () => {
 		try {
 			if (portRef.current) return;
 
-			const sppUUID = "00001101-0000-1000-8000-00805f9b34fb";
-
-			portRef.current = await navigator.serial.requestPort({
-				allowedBluetoothServiceClassIds: [sppUUID],
-			});
+			portRef.current = await navigator.serial.requestPort();
 			await portRef.current.open({ baudRate: 9600 });
 
 			if (portRef.current.writable) {
@@ -55,24 +55,88 @@ const App = () => {
 		writeQueueRef.current = currentWrite;
 	};
 
-	useEffect(() => {
-		isConnected && sendSerial(`U${lift}`);
-	}, [lift, isConnected]);
+	const handleLiftChange = (e: ChangeEvent<HTMLInputElement>) => {
+		const val = e.target.valueAsNumber;
+		setLift(val);
 
-	useEffect(() => {
-		isConnected && sendSerial(`V${speed}`);
-	}, [speed, isConnected]);
+		if (!liftRef.current && isConnected) {
+			sendSerial(`U${val}`);
+			liftRef.current = true;
+			setTimeout(() => {
+				liftRef.current = false;
+			}, serialDelay);
+		}
+	};
+
+	const handleSpeedChange = (e: ChangeEvent<HTMLInputElement>) => {
+		const val = e.target.valueAsNumber;
+		setSpeed(val);
+
+		if (!speedRef.current && isConnected) {
+			sendSerial(`V${val}`);
+			speedRef.current = true;
+			setTimeout(() => {
+				speedRef.current = false;
+			}, serialDelay);
+		}
+	};
+
+	const syncLift = (val: number) => isConnected && sendSerial(`U${val}`);
+	const syncSpeed = (val: number) => isConnected && sendSerial(`V${val}`);
 
 	useEffect(() => {
 		isConnected && sendSerial(`R${rudder}`);
 	}, [rudder, isConnected]);
+
+	useEffect(() => {
+		const handleDisconnect = (event: Event) => {
+			const disconnectedPort = event.target as SerialPort;
+
+			if (disconnectedPort === portRef.current) {
+				console.warn("Serial port disconnected");
+				setIsConnected(false);
+				writerRef.current = null;
+				portRef.current = null;
+			}
+		};
+		navigator.serial.addEventListener("disconnect", handleDisconnect);
+
+		return () => {
+			navigator.serial.removeEventListener(
+				"disconnect",
+				handleDisconnect,
+			);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!isConnected) return;
+
+		const heartbeatInterval = setInterval(() => {
+			sendSerial("H");
+		}, 500);
+
+		return () => clearInterval(heartbeatInterval);
+	}, [isConnected]);
 
 	return (
 		<>
 			<div className="m-4 flex w-fit flex-col gap-4">
 				<div className="flex items-center gap-4">
 					<h1 className="text-2xl">RC Controller</h1>
-					<Button icon="fullscreen" text="Toggle" onClick={() => {!document.fullscreenElement ? document.documentElement.requestFullscreen().catch(() => "Unable to enter fullscreen") : document.exitFullscreen() }} />
+					<Button
+						icon="fullscreen"
+						text="Toggle"
+						onClick={() => {
+							!document.fullscreenElement
+								? document.documentElement
+										.requestFullscreen()
+										.catch(
+											() => "Unable to enter fullscreen",
+										)
+								: document.exitFullscreen();
+						}}
+					/>
 				</div>
 				<Button
 					icon="bluetooth"
@@ -88,7 +152,7 @@ const App = () => {
 							text=""
 							onClick={() => rudder > 0 && setRudder(rudder - 15)}
 						/>
-						<h1 className="text-center">
+						<h1 className="text-center select-none">
 							{rudder == 45
 								? "CEN"
 								: rudder < 45
@@ -112,18 +176,18 @@ const App = () => {
 						min={0}
 						max={255}
 						value={lift}
-						onChange={(e: ChangeEvent<HTMLInputElement>) =>
-							setLift(e.target.valueAsNumber)
-						}
+						onChange={handleLiftChange}
+						onMouseUp={() => syncLift(lift)}
+						onTouchEnd={() => syncLift(lift)}
 					/>
 					<Slider
 						text="Speed"
 						min={-255}
 						max={255}
 						value={speed}
-						onChange={(e: ChangeEvent<HTMLInputElement>) =>
-							setSpeed(e.target.valueAsNumber)
-						}
+						onChange={handleSpeedChange}
+						onMouseUp={() => syncSpeed(speed)}
+						onTouchEnd={() => syncSpeed(speed)}
 					/>
 				</div>
 			</div>
