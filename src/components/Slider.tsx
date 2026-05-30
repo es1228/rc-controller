@@ -37,7 +37,7 @@ const Slider = ({
 					onChange={onChange}
 					onMouseUp={onMouseUp}
 					onTouchEnd={onTouchEnd}
-					className="bg-on-bg-light accent-primary dark:bg-on-bg-dark h-full appearance-auto rounded-full p-2 [direction:rtl] [writing-mode:vertical-lr]"
+					className="bg-on-bg-light accent-blue dark:bg-on-bg-dark h-full appearance-auto rounded-full p-2 [direction:rtl] [writing-mode:vertical-lr]"
 				/>
 				<div
 					className="flex flex-col-reverse justify-between text-sm select-none pointer-events-none"
