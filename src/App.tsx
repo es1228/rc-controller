@@ -3,20 +3,24 @@ import Button from "./components/Button";
 import Slider from "./components/Slider";
 
 const App = () => {
+	// control variables
 	const [lift, setLift] = useState<number>(0);
 	const [speed, setSpeed] = useState<number>(0);
 	const [rudder, setRudder] = useState<number>(45);
 
+	// serial port variables
 	const [isConnected, setIsConnected] = useState<boolean>(false);
 	const writerRef = useRef<WritableStreamDefaultWriter<Uint8Array> | null>(
 		null,
 	);
 	const portRef = useRef<SerialPort | null>(null);
 
-	const liftRef = useRef<boolean>(false);
-	const speedRef = useRef<boolean>(false);
+	// slider control variables
+	const liftToggledRef = useRef<boolean>(false);
+	const speedToggledRef = useRef<boolean>(false);
 	const serialDelay = 50;
 
+	// connect to serial port
 	const connectSerial = async () => {
 		try {
 			if (portRef.current) return;
@@ -33,8 +37,10 @@ const App = () => {
 		}
 	};
 
+	// create a queue of promises to handle lots of data
 	const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
 
+	// send data over serial port
 	const sendSerial = async (data: string) => {
 		if (!writerRef.current) return;
 
@@ -55,39 +61,44 @@ const App = () => {
 		writeQueueRef.current = currentWrite;
 	};
 
+	// lift slider change
 	const handleLiftChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const val = e.target.valueAsNumber;
 		setLift(val);
 
-		if (!liftRef.current && isConnected) {
+		if (!liftToggledRef.current && isConnected) {
 			sendSerial(`U${val}`);
-			liftRef.current = true;
+			liftToggledRef.current = true;
 			setTimeout(() => {
-				liftRef.current = false;
+				liftToggledRef.current = false;
 			}, serialDelay);
 		}
 	};
 
+	// speed slider change
 	const handleSpeedChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const val = e.target.valueAsNumber;
 		setSpeed(val);
 
-		if (!speedRef.current && isConnected) {
+		if (!speedToggledRef.current && isConnected) {
 			sendSerial(`V${val}`);
-			speedRef.current = true;
+			speedToggledRef.current = true;
 			setTimeout(() => {
-				speedRef.current = false;
+				speedToggledRef.current = false;
 			}, serialDelay);
 		}
 	};
 
-	const syncLift = (val: number) => isConnected && sendSerial(`U${val}`);
-	const syncSpeed = (val: number) => isConnected && sendSerial(`V${val}`);
+	// sync the final values when sliders let go
+	const syncFinalLift = (finalVal: number) => isConnected && sendSerial(`U${finalVal}`);
+	const syncFinalSpeed = (finalVal: number) => isConnected && sendSerial(`V${finalVal}`);
 
+	// check for rudder changes
 	useEffect(() => {
 		isConnected && sendSerial(`R${rudder}`);
 	}, [rudder, isConnected]);
 
+	// check for port disconnect
 	useEffect(() => {
 		const handleDisconnect = (event: Event) => {
 			const disconnectedPort = event.target as SerialPort;
@@ -109,6 +120,7 @@ const App = () => {
 		};
 	}, []);
 
+	// send a heartbeat every 500ms
 	useEffect(() => {
 		if (!isConnected) return;
 
@@ -177,8 +189,8 @@ const App = () => {
 						max={255}
 						value={lift}
 						onChange={handleLiftChange}
-						onMouseUp={() => syncLift(lift)}
-						onTouchEnd={() => syncLift(lift)}
+						onMouseUp={() => syncFinalLift(lift)}
+						onTouchEnd={() => syncFinalLift(lift)}
 					/>
 					<Slider
 						text="Speed"
@@ -186,8 +198,8 @@ const App = () => {
 						max={255}
 						value={speed}
 						onChange={handleSpeedChange}
-						onMouseUp={() => syncSpeed(speed)}
-						onTouchEnd={() => syncSpeed(speed)}
+						onMouseUp={() => syncFinalSpeed(speed)}
+						onTouchEnd={() => syncFinalSpeed(speed)}
 					/>
 				</div>
 			</div>
