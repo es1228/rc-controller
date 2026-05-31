@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import {
+	useEffect,
+	useRef,
+	useState,
+	type ChangeEvent,
+	type MouseEvent,
+	type TouchEvent,
+} from "react";
 import Button from "./components/Button";
 import Slider from "./components/Slider";
 
@@ -23,7 +30,8 @@ const App = () => {
 	// connect to serial port
 	const connectSerial = async () => {
 		try {
-			if (portRef.current) return;
+			if (isConnected) return;
+			await disconnectSerial();
 
 			portRef.current = await navigator.serial.requestPort();
 			await portRef.current.open({ baudRate: 9600 });
@@ -32,8 +40,9 @@ const App = () => {
 				writerRef.current = portRef.current.writable.getWriter();
 				setIsConnected(true);
 			}
-		} catch {
-			console.error("Connection failed");
+		} catch (err) {
+			console.error(err);
+			setIsConnected(false);
 		}
 	};
 
@@ -42,7 +51,7 @@ const App = () => {
 
 	// send data over serial port
 	const sendSerial = async (data: string) => {
-		if (!writerRef.current) return;
+		if (!isConnected || !writerRef.current) return;
 
 		const previousWrite = writeQueueRef.current;
 
@@ -50,15 +59,26 @@ const App = () => {
 			try {
 				await previousWrite.catch(() => {});
 
+				if (!isConnected || !writerRef.current) return;
+
 				const oEncoder = new TextEncoder();
 				const packet = oEncoder.encode(data + "\n");
 
 				await writerRef.current!.write(packet);
-			} catch {
-				console.error("Data could not be sent");
+			} catch (err) {
+				console.error(err);
 			}
 		})();
 		writeQueueRef.current = currentWrite;
+	};
+
+	// disconnect serial port
+	const disconnectSerial = async () => {
+		setIsConnected(false);
+		writerRef.current?.releaseLock();
+		await portRef.current?.close().catch(() => {});
+		portRef.current = null;
+		writerRef.current = null;
 	};
 
 	// lift slider change
@@ -90,8 +110,12 @@ const App = () => {
 	};
 
 	// sync the final values when sliders let go
-	const syncFinalLift = (finalVal: number) => isConnected && sendSerial(`U${finalVal}`);
-	const syncFinalSpeed = (finalVal: number) => isConnected && sendSerial(`V${finalVal}`);
+	const syncFinalLift = (
+		e: MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>,
+	) => isConnected && sendSerial(`U${e.currentTarget.valueAsNumber}`);
+	const syncFinalSpeed = (
+		e: MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>,
+	) => isConnected && sendSerial(`V${e.currentTarget.valueAsNumber}`);
 
 	// check for rudder changes
 	useEffect(() => {
@@ -105,9 +129,7 @@ const App = () => {
 
 			if (disconnectedPort === portRef.current) {
 				console.warn("Serial port disconnected");
-				setIsConnected(false);
-				writerRef.current = null;
-				portRef.current = null;
+				disconnectSerial();
 			}
 		};
 		navigator.serial.addEventListener("disconnect", handleDisconnect);
@@ -125,7 +147,7 @@ const App = () => {
 		if (!isConnected) return;
 
 		const heartbeatInterval = setInterval(() => {
-			sendSerial("H");
+			isConnected && writerRef.current && sendSerial("H");
 		}, 500);
 
 		return () => clearInterval(heartbeatInterval);
@@ -152,8 +174,8 @@ const App = () => {
 				</div>
 				<Button
 					icon="bluetooth"
-					text={isConnected ? "Connected" : "Connect to BT"}
-					onClick={connectSerial}
+					text={isConnected ? "Disconnect" : "Connect"}
+					onClick={isConnected ? disconnectSerial : connectSerial}
 				/>
 			</div>
 			<div className="fixed bottom-25 left-5 lg:top-120 lg:bottom-20">
@@ -189,8 +211,8 @@ const App = () => {
 						max={255}
 						value={lift}
 						onChange={handleLiftChange}
-						onMouseUp={() => syncFinalLift(lift)}
-						onTouchEnd={() => syncFinalLift(lift)}
+						onMouseUp={syncFinalLift}
+						onTouchEnd={syncFinalLift}
 					/>
 					<Slider
 						text="Speed"
@@ -198,8 +220,8 @@ const App = () => {
 						max={255}
 						value={speed}
 						onChange={handleSpeedChange}
-						onMouseUp={() => syncFinalSpeed(speed)}
-						onTouchEnd={() => syncFinalSpeed(speed)}
+						onMouseUp={syncFinalSpeed}
+						onTouchEnd={syncFinalSpeed}
 					/>
 				</div>
 			</div>
